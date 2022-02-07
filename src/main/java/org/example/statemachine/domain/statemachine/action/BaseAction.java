@@ -9,26 +9,25 @@ import org.springframework.statemachine.action.Action;
 import static org.example.statemachine.domain.statemachine.state.FsmState.EXIT;
 
 
-abstract public class ATestAction implements Action<FsmState, FsmEvent> {
+abstract public class BaseAction implements Action<FsmState, FsmEvent> {
 
     private final StateHolder stateHolder;
 
-    protected ATestAction(StateHolder stateHolder) {
+    protected BaseAction(StateHolder stateHolder) {
         this.stateHolder = stateHolder;
     }
 
     @Override
     public void execute(final StateContext<FsmState, FsmEvent> context) {
-        System.out.println("   ########## " + this.getClass().getSimpleName() + " execute");
         FsmState targetState = context.getTarget().getId();
+
+        System.out.println(String.format("   ### execute [%s] targetState [%s]",
+                this.getClass().getSimpleName(), targetState.name()));
+
         if (targetState != EXIT) {
-            System.out.println("   ### persist state = " + context.getTarget().getId());
             stateHolder.setState(context.getTarget().getId());
         } else {
-            System.out.println("   ### EXIT");
-            System.out.println("   ### persist state = " + context.getTarget().getId());
             stateHolder.setState(context.getTarget().getId());
-
         }
     }
 }

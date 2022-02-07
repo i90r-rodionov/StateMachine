@@ -15,24 +15,25 @@ import org.springframework.statemachine.config.builders.StateMachineStateConfigu
 import org.springframework.statemachine.config.builders.StateMachineTransitionConfigurer;
 import org.springframework.statemachine.guard.Guard;
 
-import java.util.EnumSet;
-
 @Configuration
 @EnableStateMachineFactory
 public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<FsmState, FsmEvent> {
 
+    private static final long SIGNED_SLA = 60000L;
+    private static final long SIGNED_RETRY = 15000L;
+    private static final long CREATE_ECM_FOLDER_RETRY = 10000L;
     private final SaveStateAction saveStateAction;
     private final SaveStateAndStopAction saveStateAndStopAction;
-    private final EcmFolderAction ecmFolderAction;
+    private final CreateEcmFolderAction createEcmFolderAction;
 
     public StateMachineConfig(
             SaveStateAction saveStateAction,
             SaveStateAndStopAction saveStateAndStopAction,
-            EcmFolderAction ecmFolderAction
+            CreateEcmFolderAction ecmFolderAction
     ) {
         this.saveStateAction = saveStateAction;
         this.saveStateAndStopAction = saveStateAndStopAction;
-        this.ecmFolderAction = ecmFolderAction;
+        this.createEcmFolderAction = ecmFolderAction;
     }
 
 
@@ -53,8 +54,9 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<FsmSta
                 //.states(EnumSet.allOf(FsmState.class))
                 .state(FsmState.READY_TO_PRINT)
                 .state(FsmState.READY_TO_SIGN)
-                .choice(FsmState.SIGNED)
-                .state(FsmState.ECM_FOLDER_CREATE)
+                .choice(FsmState.CHECK_SIGN)
+                .state(FsmState.SIGNED)
+                .state(FsmState.ECM_FOLDER)
                 .state(FsmState.ERROR)
                 .state(FsmState.SLA_ERROR)
                 .end(FsmState.EXIT);
@@ -65,34 +67,108 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<FsmSta
     @Override
     public void configure(final StateMachineTransitionConfigurer<FsmState, FsmEvent> transitions) throws Exception {
 
+        // to READY_TO_PRINT
+        transitions
+                .withExternal()
+                .source(FsmState.CREATE).target(FsmState.READY_TO_PRINT)
+                .event(FsmEvent.CHECK_READY_TO_PRINT)
+                .guard(checkReadyToPrint())
+                .action(saveStateAction);
+
+        // to READY_TO_SIGN
+        transitions
+                .withExternal()
+                .source(FsmState.READY_TO_PRINT).target(FsmState.READY_TO_SIGN)
+                .event(FsmEvent.CHECK_READY_TO_SIGN)
+                .guard(checkReadyToSign())
+                .action(saveStateAction);
+
+        // from READY_TO_SIGN
+        transitions
+                // - to exit
+                .withExternal()
+                .source(FsmState.READY_TO_SIGN).target(FsmState.EXIT)
+                .event(FsmEvent.EXIT_EVENT)
+                .action(saveStateAction)
+                .and()
+
+                .withExternal()
+                .source(FsmState.READY_TO_SIGN).target(FsmState.CHECK_SIGN)
+                .event(FsmEvent.SIGN)
+                .guard(null)
+                .action(saveStateAction)
+                .and()
+
+                // - to error
+                // - to SIGNED
+                .withChoice()
+                .source(FsmState.CHECK_SIGN)
+                .first(FsmState.ERROR, checkNoSign(), saveStateAction)
+                .then(FsmState.SIGNED, null, saveStateAction)
+                .and()
+        ;
+
+        // from SIGNED:
+        transitions
+                // - to SLA_ERROR on time
+                .withExternal()
+                .source(FsmState.SIGNED).target(FsmState.SLA_ERROR)
+                .event(FsmEvent.SLA_EVENT)
+                .guard(checkSla())
+                .action(saveStateAction)
+                .and()
+
+                .withInternal()
+                .source(FsmState.SIGNED)
+                .action(slaErrorAction())
+                .timer(SIGNED_SLA)
+                .and()
+
+                // - to ECM_FOLDER
+                .withInternal()
+                .source(FsmState.SIGNED)
+                .timer(CREATE_ECM_FOLDER_RETRY)
+                .guard(checkCreateEcmFolder())
+                .action(createEcmFolderAction, errorAction())
+        ;
+
+
         // to EXIT
         transitions
                 .withExternal()
                 .source(FsmState.CREATE).target(FsmState.EXIT)
                 .event(FsmEvent.EXIT_EVENT)
-                .guard(tryExit())
+                .guard(checkExit())
                 .action(saveStateAndStopAction)
                 .and()
 
                 .withExternal()
                 .source(FsmState.READY_TO_PRINT).target(FsmState.EXIT)
                 .event(FsmEvent.EXIT_EVENT)
-                .guard(tryExit())
+                .guard(checkExit())
                 .action(saveStateAndStopAction)
                 .and()
 
                 .withExternal()
                 .source(FsmState.READY_TO_SIGN).target(FsmState.EXIT)
                 .event(FsmEvent.EXIT_EVENT)
-                .guard(tryExit())
+                .guard(checkExit())
                 .action(saveStateAndStopAction)
                 .and()
 
                 .withExternal()
-                .source(FsmState.ECM_FOLDER_CREATE).target(FsmState.EXIT)
+                .source(FsmState.ECM_FOLDER).target(FsmState.EXIT)
                 .event(FsmEvent.EXIT_EVENT)
-                .guard(tryExit())
+                .guard(checkExit())
                 .action(saveStateAndStopAction)
+                .and()
+
+                // from ERROR to EXIT
+                .withExternal()
+                .source(FsmState.ERROR).target(FsmState.EXIT)
+                .event(FsmEvent.EXIT_EVENT)
+                .guard(checkExit())
+                .action(saveStateAction)
                 .and()
 
                 .withInternal()
@@ -101,108 +177,24 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<FsmSta
                 .timer(15000)
                 .and()
 
+                // from SLA_ERROR to EXIT
                 .withExternal()
-                .source(FsmState.ERROR).target(FsmState.EXIT)
+                .source(FsmState.SLA_ERROR).target(FsmState.EXIT)
                 .event(FsmEvent.EXIT_EVENT)
-                .guard(tryExit())
-                .action(saveStateAction)
-
-        ;
-
-        // from CREATE
-        transitions
-                .withExternal()
-                .source(FsmState.CREATE).target(FsmState.READY_TO_PRINT)
-                .event(FsmEvent.TRY_PRINT)
-                .guard(tryPrint())
-                .action(saveStateAction)
-        ;
-
-        // from READY_TO_PRINT
-        transitions
-                .withExternal()
-                .source(FsmState.READY_TO_PRINT).target(FsmState.READY_TO_SIGN)
-                .event(FsmEvent.TRY_SIGN)
-                .guard(trySign())
-                .action(saveStateAction)
-        ;
-
-        // from READY_TO_SIGN
-        transitions
-                .withExternal()
-                .source(FsmState.READY_TO_SIGN).target(FsmState.SIGNED)
-                .event(FsmEvent.SIGN_EVENT)
-                .guard(allSign())
-                .action(saveStateAction)
-        ;
-
-        // from SIGNED
-        transitions
-                .withChoice()
-                .source(FsmState.SIGNED)
-                .first(FsmState.ERROR, taskChoice())
-                .last(FsmState.ECM_FOLDER_CREATE, ecmFolderAction)
-                .and()
-
-                .withExternal()
-                .source(FsmState.SIGNED).target(FsmState.SLA_ERROR)
-                .event(FsmEvent.SLA_EVENT)
+                .guard(checkExit())
                 .action(saveStateAction)
                 .and()
-
 
                 .withInternal()
-                .source(FsmState.SIGNED)
-                .action(slaErrorAction())
+                .source(FsmState.SLA_ERROR)
+                .action(timerAction())
                 .timer(15000)
-                .and()
 
         ;
 
 
-/*
-                .and()
-                .withExternal()
-                .source(ECM_FOLDER_CREATE)
-                .target(ECM_SEND)
-                .timer(0)
-                .guard(null)
-                .action(null)
 
-                .and()
-                .withExternal()
-                .source(ECM_SEND)
-                .event(ECM_CALLBACK)
-                .target(ECM_RECEIVE)
-                .guard(null)
-                .action(null)
-
-                .and()//?
-                .withExternal()
-                .source(ECM_SEND)
-                .target(ECM_RECEIVE)
-                .timer(0)
-                .guard(null)
-                .action(null)
-
-                .and()
-                .withExternal()
-                .source(ECM_RECEIVE)
-                .target(PEGA_SEND)
-                .guard(null)
-                .action(null)
-
-                .and()
-                .withExternal()
-                .source(ECM_RECEIVE)
-                .target(PEGA_SEND)
-                .guard(null)
-                .action(null)
-*/
-
-        ;
     }
-
 
     @Bean
     public Action<FsmState, FsmEvent> errorAction() {
@@ -219,16 +211,32 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<FsmSta
         return new SlaErrorAction();
     }
 
-
     @Bean
-    public Guard<FsmState, FsmEvent> tryPrint() {
-        return new TryPrint();
+    public Guard<FsmState, FsmEvent> checkReadyToPrint() {
+        return new ReadyToPrintGuard();
     }
 
     @Bean
-    public Guard<FsmState, FsmEvent> trySign() {
-        return new TrySign();
+    public Guard<FsmState, FsmEvent> checkReadyToSign() {
+        return new ReadyToSignGuard();
     }
+
+    @Bean
+    public Guard<FsmState, FsmEvent> checkNoSign() {
+        return new NoSignGuard();
+    }
+
+    @Bean
+    public Guard<FsmState, FsmEvent> checkCreateEcmFolder() {
+        return new CreateEcmFolderGuard();
+    }
+
+
+    @Bean
+    public Guard<FsmState, FsmEvent> checkSla() {
+        return new SlaGuard();
+    }
+
 
     @Bean
     public Guard<FsmState, FsmEvent> allSign() {
@@ -236,13 +244,13 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<FsmSta
     }
 
     @Bean
-    public Guard<FsmState, FsmEvent> tryExit() {
-        return new TryExit();
+    public Guard<FsmState, FsmEvent> checkExit() {
+        return new ExitGuard();
     }
 
     @Bean
-    public Guard<FsmState, FsmEvent> taskChoice() {
-        return new TaskChoice();
+    public Guard<FsmState, FsmEvent> ecmFolderGuard() {
+        return new EcmFolderGuard();
     }
 
 //    @Bean

@@ -55,12 +55,12 @@ public class FsmApplicationListener implements StateMachineListener<FsmState, Fs
     @Override
     public void transitionEnded(final Transition<FsmState, FsmEvent> transition) {
         if (transition.getKind() == TransitionKind.INITIAL) return;
-        System.out.println("   ...  transitionEnded " + transition.getSource().getId() + " -> " + transition.getTarget().getId());
+        System.out.println("   ... transitionEnded " + transition.getSource().getId() + " -> " + transition.getTarget().getId());
     }
 
     @Override
     public void stateMachineStarted(final StateMachine<FsmState, FsmEvent> stateMachine) {
-        System.out.println("   ...  stateMachineStarted " + stateMachine.getUuid());
+        System.out.println("   ... stateMachineStarted " + stateMachine.getUuid());
     }
 
     @Override
@@ -84,6 +84,6 @@ public class FsmApplicationListener implements StateMachineListener<FsmState, Fs
 //        if (exit != null && exit) {
 //            stateContext.getStateMachine().sendEvent(PurchaseEvent.EXIT_EVENT);
 //        }
-//        System.out.println("...  stateContext");
+//        System.out.println(String.format("   ... stateContext=[%s]", stateContext));
     }
 }

@@ -1,6 +1,8 @@
 package org.example.statemachine.web.controller;
 
 import org.example.statemachine.domain.service.fsm.FsmService;
+import org.example.statemachine.domain.service.fsm.dto.FlagsDto;
+import org.example.statemachine.domain.statemachine.guard.Flags;
 import org.example.statemachine.domain.statemachine.persist.StateHolder;
 import org.example.statemachine.domain.statemachine.event.FsmEvent;
 import org.example.statemachine.domain.statemachine.state.FsmState;
@@ -28,7 +30,7 @@ public class FsmController {
 
     @PostMapping("/test")
     public String test(@RequestBody EventRequestDto request) {
-        System.out.println("### 1");
+        System.out.println("### 1: " + request.getEventName());
 
         fsmService.test(request.getId(), FsmEvent.valueOf(request.getEventName()));
         System.out.println("### 2");
@@ -38,10 +40,10 @@ public class FsmController {
 
     @GetMapping("/test/{id}/{event}")
     public String test(@PathVariable("id") String id, @PathVariable("event") String event) {
-        System.out.println("### 1");
+        System.out.println(">>> 1: " + event);
 
         fsmService.test(id, FsmEvent.valueOf(event.toUpperCase()));
-        System.out.println("### 2\n\r");
+        System.out.println(">>> 2\n\r");
 
         return String.valueOf(state.getState());
     }
@@ -55,15 +57,43 @@ public class FsmController {
         return String.valueOf(state.getState());
     }
 
+    @GetMapping(path = "/reset")
+    public String reset() {
+        System.out.println("### 101");
+        FlagsDto flags = new FlagsDto(false, false);
+        fsmService.reset(flags);
+
+        String response = String.valueOf(String.format("State=[%s] noSignFlag=[%S] createFolderFlag=[%s]",
+                state.getState(), Flags.isNoSignFlag(), Flags.isCreateFolderFlag()));
+        System.out.println("### 102 = " + response);
+        return response;
+
+    }
+
+    @GetMapping("/flags/{sign}/{folder}")
+    public String flags(@PathVariable("sign") String sign, @PathVariable("folder") String folder) {
+        System.out.println(">>> Flags");
+        FlagsDto flags = new FlagsDto(Boolean.parseBoolean(sign), Boolean.parseBoolean(folder));
+        fsmService.flags(flags);
+
+
+        String response = String.valueOf(String.format("State=[%s] noSignFlag=[%S] createFolderFlag=[%s]",
+                state.getState(), Flags.isNoSignFlag(), Flags.isCreateFolderFlag()));
+        System.out.println("### Flags = " + response);
+        return response;
+    }
+
+
     @RequestMapping(path = "/state")
     public String state() {
-        return String.valueOf(state.getState());
+        return String.valueOf(String.format("State=[%s] noSignFlag=[%S] createFolderFlag=[%s]",
+                state.getState(), Flags.isNoSignFlag(), Flags.isCreateFolderFlag()));
     }
 
     @RequestMapping(path = "/map")
     public String map() {
         Map<UUID, StateMachine<FsmState, FsmEvent>> map = state.getMap();
-        map.forEach((k,v) -> System.out.println(k + " " + v.getState().getId() + " {} " + v.isComplete()));
+        map.forEach((k, v) -> System.out.println(k + " " + v.getState().getId() + " {} " + v.isComplete()));
         System.out.println();
         return map.size() + "";
     }

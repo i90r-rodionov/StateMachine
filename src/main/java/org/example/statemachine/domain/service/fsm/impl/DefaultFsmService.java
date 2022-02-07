@@ -1,6 +1,8 @@
 package org.example.statemachine.domain.service.fsm.impl;
 
 import org.example.statemachine.domain.service.fsm.FsmService;
+import org.example.statemachine.domain.service.fsm.dto.FlagsDto;
+import org.example.statemachine.domain.statemachine.guard.Flags;
 import org.example.statemachine.domain.statemachine.persist.StateHolder;
 import org.example.statemachine.domain.statemachine.event.FsmEvent;
 import org.example.statemachine.domain.statemachine.state.FsmState;
@@ -33,7 +35,7 @@ public class DefaultFsmService implements FsmService {
     public boolean test(String id, FsmEvent event) {
 
         StateMachine<FsmState, FsmEvent> stateMachine = getSM();
-        System.out.println(String.format("   ### START: SendEvent [%s] to SM=[%s]", event.name(), stateMachine));
+        System.out.println(String.format("   ###### START: SendEvent [%s] to SM=[%s]", event.name(), stateMachine));
         try {
             stateMachine.sendEvent(event);
         } catch (Exception e) {
@@ -44,14 +46,32 @@ public class DefaultFsmService implements FsmService {
         if (stop != null && stop) {
 //            stateMachine.stop();
         }
-        System.out.println(String.format("   ### DONE: SendEvent [%s] to SM=[%s]", event.name(), stateMachine));
+        System.out.println(String.format("   ###### DONE: SendEvent [%s] to SM=[%s]", event.name(), stateMachine));
         return true;
     }
 
     @Override
     public boolean restore() {
         StateMachine<FsmState, FsmEvent> stateMachine = getSM();
-        System.out.println(String.format("   # Execute resore() with SM=[%s]", stateMachine));
+        return true;
+    }
+
+    @Override
+    public boolean reset(FlagsDto flags) {
+
+        Flags.setNoSignFlag(flags.getNoSignFlag());
+        Flags.setCreateFolderFlag(flags.getCreateFolderFlag());
+        stateHolder.setState(FsmState.CREATE);
+        StateMachine<FsmState, FsmEvent> stateMachine = getSM();
+        return true;
+    }
+
+    @Override
+    public boolean flags(FlagsDto flags) {
+
+        Flags.setNoSignFlag(flags.getNoSignFlag());
+        Flags.setCreateFolderFlag(flags.getCreateFolderFlag());
+
         return true;
     }
 
@@ -60,14 +80,11 @@ public class DefaultFsmService implements FsmService {
         final StateMachine<FsmState, FsmEvent> stateMachine = stateMachineFactory.getStateMachine();
         final StateMachineContext<FsmState, FsmEvent> context = getCxt(stateHolder.getState());
 
-        System.out.println(String.format("   # Restore ctx=[%s]", context));
-        System.out.println(String.format("   # Get SM=[%s]", stateMachine));
-
         stateMachine.stopReactively().block();
         stateMachine.getStateMachineAccessor().doWithAllRegions(access -> access.resetStateMachine(context));
         stateMachine.startReactively().block();
         stateHolder.add(stateMachine);
-        System.out.println(String.format("   # Reset SM to [%s]", stateMachine));
+        System.out.println(String.format("   ###### Reset SM to [%s]", stateMachine));
         return stateMachine;
     }
 

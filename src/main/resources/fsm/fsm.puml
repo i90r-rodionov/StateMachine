@@ -1,24 +1,45 @@
 @startuml
-scale 0.9
+scale 0.8
 
 hide empty description
 
-SIGNED:CHOICE
+CREATE:
+state READY_TO_PRINT {
+
+    state printGuard <<inputPin>>
+}
+
+state READY_TO_SIGN {
+    state signGuard <<inputPin>>
+}
+state SIGN_CHECK <<choice>>
+SIGNED:bla-bla-bla
+
+state ECM_FOLDER {
+    state ecmFolderGuard <<inputPin>>
+}
+
+
 SLA_ERROR:
 
-[*] --> CREATE : init
+[*] -[dashed]-> CREATE : init
 
-CREATE --> READY_TO_PRINT : try_print
-READY_TO_PRINT --> READY_TO_SIGN : try_sign
-READY_TO_SIGN --> SIGNED : sign_event
-SIGNED --> ECM_FOLDER_CREATE : ecm_callback
-SIGNED --> ERROR :error_event
-SIGNED -[dotted]-> SLA_ERROR : sla_error
+CREATE -[bold]-> printGuard : check_ready_to_print
+READY_TO_PRINT -[bold]-> signGuard : check_ready_to_sign
+READY_TO_SIGN -[bold]-> SIGN_CHECK : sign
+SIGN_CHECK -[dashed]-> ERROR : checkSign=False
+SIGN_CHECK -[dashed]-> SIGNED : checkSign=True
+SIGNED -[dashed]-> ecmFolderGuard : on_time_event
+
+
+
+SIGNED -[dashed]-> SLA_ERROR : sla_error
+ECM_FOLDER -[dashed]-> SLA_ERROR : sla_error
 
 
 CREATE -[dotted]-> [*] : exit_event
 READY_TO_PRINT -[dotted]-> [*] : exit_event
 READY_TO_SIGN -[dotted]-> [*] : exit_event
-ERROR --> [*] : on_time_event
+ERROR -[dashed]-> [*] : on_time_event
 SLA_ERROR --> [*] : on_time_event
 @enduml

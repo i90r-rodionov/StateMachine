@@ -16,13 +16,14 @@ public class SlaErrorAction implements Action<FsmState, FsmEvent> {
         System.out.println("   --- SM: " + stateContext.getStateMachine());
 
 
+        System.out.println("   --- SLA_ERROR");
         Message<FsmEvent> eventMessage = MessageBuilder
-                .withPayload(FsmEvent.EXIT_EVENT)
+                .withPayload(FsmEvent.SLA_EVENT)
                 .setHeader(StateMachineMessageHeaders.HEADER_DO_ACTION_TIMEOUT, 5000)
                 .build();
         //stateContext.getStateMachine().sendEvent(eventMessage);
 
-        System.out.println("   --- EXIT_EVENT");
-        stateContext.getStateMachine().sendEvent(FsmEvent.EXIT_EVENT);
+
+        stateContext.getStateMachine().sendEvent(FsmEvent.SLA_EVENT);
     }
 }

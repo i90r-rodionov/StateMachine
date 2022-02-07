@@ -1,9 +1,9 @@
 package org.example.statemachine.domain.statemachine.event;
 
 public enum FsmEvent {
-   TRY_PRINT,
-   TRY_SIGN,
-   SIGN_EVENT,
+   CHECK_READY_TO_PRINT,
+   CHECK_READY_TO_SIGN,
+   SIGN,
    ECM_CALLBACK,
    PEGA_CALLBACK,
    EXIT_EVENT,

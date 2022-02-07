@@ -3,16 +3,18 @@ package org.example.statemachine.domain.statemachine.guard;
 import org.example.statemachine.domain.statemachine.event.FsmEvent;
 import org.example.statemachine.domain.statemachine.state.FsmState;
 import org.springframework.statemachine.StateContext;
-import org.springframework.statemachine.guard.Guard;
+
+import java.util.Set;
 
 
-public class TaskChoice implements Guard<FsmState, FsmEvent> {
+public class SlaGuard extends BaseGuard {
 
     @Override
     public boolean evaluate(StateContext<FsmState, FsmEvent> context) {
-        boolean flag = false;
+        boolean flag = true;
 
-        System.out.println(String.format("### Guard [%s] exit=[%s]", this.getClass().getSimpleName(), flag));
-        return flag;
+        setFlag(flag);
+
+        return super.evaluate(context);
     }
 }

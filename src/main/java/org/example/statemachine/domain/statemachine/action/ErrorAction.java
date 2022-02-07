@@ -9,6 +9,6 @@ import org.springframework.statemachine.action.Action;
 public class ErrorAction implements Action<FsmState, FsmEvent> {
     @Override
     public void execute(final StateContext<FsmState, FsmEvent> context) {
-        System.out.println("Ошибка при переходе в статус " + context.getTarget().getId());
+        System.out.println(String.format("   ### execute [%s] context=[%s]", this.getClass().getSimpleName(), context));
     }
 }

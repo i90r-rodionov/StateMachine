@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 
 
 @Service
-public class SaveStateAction extends ATestAction {
+public class SaveStateAction extends BaseAction {
 
     public SaveStateAction(StateHolder stateHolder) {
         super(stateHolder);
