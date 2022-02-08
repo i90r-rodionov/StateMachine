@@ -116,18 +116,12 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<FsmSta
 
         // from SIGNED:
         transitions
-                // - to SLA_ERROR on time
-                .withExternal()
-                .source(FsmState.SIGNED).target(FsmState.SLA_ERROR)
-                .event(FsmEvent.SLA_EVENT)
-                .guard(checkSla())
-                .action(saveStateAction)
-                .and()
-
+                // - to ECM_FOLDER
                 .withLocal()
-                .source(FsmState.SIGNED).target(FsmState.SLA_ERROR)
-                .action(slaErrorAction())
-                .timer(SIGNED_SLA)
+                .source(FsmState.SIGNED).target(FsmState.ECM_FOLDER)
+                .timerOnce(1000L)
+                .guard(createEcmFolderGuard)
+                .action(createEcmFolderAction, createEcmFolderErrorAction)
                 .and()
 
                 // - to ECM_FOLDER
@@ -138,6 +132,13 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<FsmSta
                 .action(createEcmFolderAction, createEcmFolderErrorAction)
                 .and()
 
+
+                // - to SLA_ERROR on time
+                .withLocal()
+                .source(FsmState.SIGNED).target(FsmState.SLA_ERROR)
+                .action(slaErrorAction())
+                .timer(SIGNED_SLA)
+                .and()
         ;
 
 

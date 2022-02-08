@@ -1,5 +1,6 @@
 package org.example.fsm.service.fsm.impl;
 
+import lombok.extern.slf4j.Slf4j;
 import org.example.fsm.service.fsm.FsmService;
 import org.example.fsm.statemachine.state.FsmState;
 import org.example.fsm.service.fsm.dto.FlagsDto;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @SuppressWarnings("all")
+@Slf4j
 public class DefaultFsmService implements FsmService {
 
 //    private final StateMachinePersister<PurchaseState, PurchaseEvent, String> persister;
@@ -33,7 +35,7 @@ public class DefaultFsmService implements FsmService {
 
     @Override
     public boolean test(String id, FsmEvent event) {
-
+        LOG.debug("Start sendEvent");
         StateMachine<FsmState, FsmEvent> stateMachine = getSM();
         System.out.println(String.format("   ###### START: SendEvent [%s] to SM=[%s]", event.name(), stateMachine));
         try {

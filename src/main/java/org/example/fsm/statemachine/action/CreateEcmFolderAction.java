@@ -1,5 +1,6 @@
 package org.example.fsm.statemachine.action;
 
+import lombok.extern.slf4j.Slf4j;
 import org.example.fsm.integration.service.EcmIntegration;
 import org.example.fsm.statemachine.event.FsmEvent;
 import org.example.fsm.statemachine.persist.StateHolder;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 
 @Service
+@Slf4j
 public class CreateEcmFolderAction extends SaveStateAction {
 
     private final EcmIntegration service;
@@ -20,7 +22,7 @@ public class CreateEcmFolderAction extends SaveStateAction {
 
     @Override
     public void execute(final StateContext<FsmState, FsmEvent> context) {
-
+        LOG.debug("call CreateEcmFolderAction");
         boolean success = service.createFolder();
 
         if (!success) {

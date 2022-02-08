@@ -17,7 +17,7 @@ public abstract class BaseGuard implements Guard<FsmState, FsmEvent> {
 
     @Override
     public boolean evaluate(StateContext<FsmState, FsmEvent> stateContext) {
-        System.out.printf("   ??? Guard [%s] return [%s]%n", this.getClass().getSimpleName(), flag);
+        System.out.printf("%n   ??? Guard [%s] return [%s]%n", this.getClass().getSimpleName(), flag);
         return flag;
     }
 }
