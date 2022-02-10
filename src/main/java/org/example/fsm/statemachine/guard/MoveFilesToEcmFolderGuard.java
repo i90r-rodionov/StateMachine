@@ -3,13 +3,15 @@ package org.example.fsm.statemachine.guard;
 import org.example.fsm.statemachine.event.FsmEvent;
 import org.example.fsm.statemachine.state.FsmState;
 import org.springframework.statemachine.StateContext;
+import org.springframework.stereotype.Service;
 
 
-public class NoSignGuard extends BaseGuard {
+@Service("checkMoveFilesToEcmFolder")
+public class MoveFilesToEcmFolderGuard extends BaseGuard {
 
     @Override
     public boolean evaluate(StateContext<FsmState, FsmEvent> context) {
-        boolean flag = Flags.isNoSignFlag();
+        boolean flag = true;
 
         setFlag(flag);
 

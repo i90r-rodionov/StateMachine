@@ -8,12 +8,12 @@ import org.springframework.statemachine.StateContext;
 import org.springframework.stereotype.Service;
 
 
-@Service("createEcmFolderAction")
-public class CreateEcmFolderAction extends SaveStateAction {
+@Service("moveFilesToEcmFolderAction")
+public class MoveFilesToEcmFoldertAction extends SaveStateAction {
 
     private final MockService service;
 
-    public CreateEcmFolderAction(StateHolder stateHolder, MockService service) {
+    public MoveFilesToEcmFoldertAction(StateHolder stateHolder, MockService service) {
         super(stateHolder);
         this.service = service;
     }
@@ -23,7 +23,7 @@ public class CreateEcmFolderAction extends SaveStateAction {
 
         trace();
 
-        boolean success = service.defaultAction();
+        boolean success = service.moveFiles();
 
         if (!success) {
             System.out.println("   ### Process Error");

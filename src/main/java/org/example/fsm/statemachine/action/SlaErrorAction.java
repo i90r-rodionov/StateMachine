@@ -1,26 +1,36 @@
 package org.example.fsm.statemachine.action;
 
-import org.example.fsm.statemachine.state.FsmState;
+import org.example.fsm.service.mock.MockService;
 import org.example.fsm.statemachine.event.FsmEvent;
+import org.example.fsm.statemachine.persist.StateHolder;
+import org.example.fsm.statemachine.state.FsmState;
 import org.springframework.statemachine.StateContext;
-import org.springframework.statemachine.action.Action;
+import org.springframework.stereotype.Service;
 
-public class SlaErrorAction implements Action<FsmState, FsmEvent> {
+
+@Service("slaErrorAction")
+public class SlaErrorAction extends SaveStateAction {
+
+    private final MockService service;
+
+    public SlaErrorAction(StateHolder stateHolder, MockService service) {
+        super(stateHolder);
+        this.service = service;
+    }
+
     @Override
-    public void execute(StateContext<FsmState, FsmEvent> stateContext) {
-        System.out.println("   ### " + this.getClass().getSimpleName() + " execute");
-        System.out.println("   --- context: " + stateContext);
-        System.out.println("   --- SM: " + stateContext.getStateMachine());
+    public void execute(final StateContext<FsmState, FsmEvent> context) {
 
+        trace();
 
-        System.out.println("   --- SLA_ERROR");
-//        Message<FsmEvent> eventMessage = MessageBuilder
-//                .withPayload(FsmEvent.SLA_EVENT)
-//                .setHeader(StateMachineMessageHeaders.HEADER_DO_ACTION_TIMEOUT, 5000)
-//                .build();
-//        //stateContext.getStateMachine().sendEvent(eventMessage);
-//
-//
-//        stateContext.getStateMachine().sendEvent(FsmEvent.SLA_EVENT);
+        boolean success = service.defaultAction();
+
+        if (!success) {
+            System.out.println("   ### Process Error");
+            throw new RuntimeException(this.getClass().getSimpleName() + " Error");
+        }
+        System.out.println("   ### Process Successful");
+
+        super.execute(context);
     }
 }

@@ -13,6 +13,8 @@ import org.springframework.statemachine.config.StateMachineFactory;
 import org.springframework.statemachine.support.DefaultStateMachineContext;
 import org.springframework.stereotype.Service;
 
+import java.util.Locale;
+
 @Service
 @SuppressWarnings("all")
 @Slf4j
@@ -21,6 +23,7 @@ public class DefaultFsmService implements FsmService {
 //    private final StateMachinePersister<PurchaseState, PurchaseEvent, String> persister;
     private final StateMachineFactory<FsmState, FsmEvent> stateMachineFactory;
     private final StateHolder stateHolder;
+    private Flags flags = Flags.getInstance();
 
 
     public DefaultFsmService(
@@ -59,24 +62,21 @@ public class DefaultFsmService implements FsmService {
     }
 
     @Override
-    public boolean reset(FlagsDto flags) {
-
-        Flags.setNoSignFlag(flags.getNoSignFlag());
-        Flags.setCreatedFolderFlag(flags.getCreatedFolderFlag());
-        Flags.setMovedFilesFlag(flags.getMovedFilesFlag());
-        stateHolder.setState(flags.getState());
+    public boolean reset(String state) {
+        flags.reset();
+        stateHolder.setState(FsmState.valueOf(state.toUpperCase()));
         StateMachine<FsmState, FsmEvent> stateMachine = getSM();
         return true;
     }
 
     @Override
-    public boolean flags(FlagsDto flags) {
+    public String flags() {
+        return flags.getFields();
+    }
 
-        Flags.setNoSignFlag(flags.getNoSignFlag());
-        Flags.setCreatedFolderFlag(flags.getCreatedFolderFlag());
-        Flags.setMovedFilesFlag(flags.getMovedFilesFlag());
-
-        return true;
+    @Override
+    public void flag(String name, String value) {
+        flags.setField(name, Boolean.parseBoolean(value));
     }
 
 

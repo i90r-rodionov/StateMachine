@@ -6,12 +6,14 @@ import org.springframework.statemachine.StateContext;
 import org.springframework.stereotype.Service;
 
 
-@Service("checkReadyToSign")
-public class ReadyToSignGuard extends BaseGuard {
+@Service("checkFilesSigned")
+public class FilesSignedGuard extends BaseGuard {
+
+    private final Flags flags = Flags.getInstance();
 
     @Override
     public boolean evaluate(StateContext<FsmState, FsmEvent> context) {
-        boolean flag = true;
+        boolean flag = flags.isFilesSignedFlag();
 
         setFlag(flag);
 

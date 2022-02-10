@@ -22,7 +22,7 @@ public class FlagsDto {
     }
 
     public FlagsDto(boolean noSignFlag, boolean createdFolderFlag, boolean sendFileFlag) {
-        state = FsmState.CREATE;
+        state = FsmState.CREATED;
         this.noSignFlag = noSignFlag;
         this.createdFolderFlag = createdFolderFlag;
         this.movedFilesFlag = sendFileFlag;

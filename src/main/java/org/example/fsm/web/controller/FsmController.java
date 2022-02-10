@@ -19,6 +19,7 @@ public class FsmController {
 
     private final FsmService fsmService;
     private final StateHolder stateHolder;
+    private final Flags flags = Flags.getInstance();
 
     public FsmController(
             FsmService fsmServiceervice,
@@ -60,40 +61,33 @@ public class FsmController {
     @GetMapping(path = "/reset/{state}")
     public String reset(@PathVariable("state") String state) {
         System.out.println("### 101");
-        FlagsDto flags = new FlagsDto(FsmState.valueOf(state.toUpperCase()), false, false, false);
-        fsmService.reset(flags);
+        fsmService.reset(state);
 
-        String response = String.format("State=[%s] noSignFlag=[%s] createdFolderFlag=[%s] movedFilesFlag=[%s]",
-                stateHolder.getState(),
-                Flags.isNoSignFlag(), Flags.isCreatedFolderFlag(), Flags.isMovedFilesFlag());
+        String response = String.format("State=[%s] %s", stateHolder.getState(), flags.getFields());
         System.out.println("### 102 = " + response);
         return response;
 
     }
 
-    @GetMapping("/flags/{sign}/{create}/{created}")
-    public String flags(@PathVariable("sign") String sign,
-                        @PathVariable("create") String create,
-                        @PathVariable("created") String created) {
+    @GetMapping("/flag/{name}/{value}")
+    public String flag(@PathVariable("name") String name,
+                        @PathVariable("value") String value) {
         System.out.println(">>> Flags");
-        FlagsDto flags = new FlagsDto(Boolean.parseBoolean(sign), Boolean.parseBoolean(create), Boolean.parseBoolean(created));
-        fsmService.flags(flags);
+        fsmService.flag(name, value);
 
-
-        String response = String.format("State=[%s] noSignFlag=[%s] createdFolderFlag=[%s] movedFilesFlag=[%s]",
-                stateHolder.getState(),
-                Flags.isNoSignFlag(), Flags.isCreatedFolderFlag(), Flags.isMovedFilesFlag());
-
+        String response = String.format("State=[%s] %s", stateHolder.getState(), flags.getFields());
         System.out.println(response);
         return response;
     }
 
 
+
     @RequestMapping(path = "/state")
     public String state() {
-        String response = String.format("State=[%s] noSignFlag=[%s] createdFolderFlag=[%s] movedFilesFlag=[%s]",
-                stateHolder.getState(),
-                Flags.isNoSignFlag(), Flags.isCreatedFolderFlag(), Flags.isMovedFilesFlag());
+
+        Flags flags = Flags.getInstance();
+
+        String response = String.format("State=[%s] %s", stateHolder.getState(), flags.getFields());
 
         System.out.println(response);
         return response;

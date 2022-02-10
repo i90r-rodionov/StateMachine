@@ -19,6 +19,7 @@ abstract public class BaseAction implements Action<FsmState, FsmEvent> {
     public void execute(final StateContext<FsmState, FsmEvent> context) {
         FsmState targetState = context.getTarget().getId();
 
+        trace();
         System.out.println(String.format("   ### execute [%s] targetState [%s]",
                 this.getClass().getSimpleName(), targetState.name()));
 
@@ -27,5 +28,16 @@ abstract public class BaseAction implements Action<FsmState, FsmEvent> {
         } else {
             stateHolder.setState(context.getTarget().getId());
         }
+    }
+
+    protected void trace() {
+        String methodName = new Object() {
+        }
+                .getClass()
+                .getEnclosingMethod()
+                .getName();
+
+        System.out.printf("   *** [%s.%s]%n", this.getClass().getSimpleName(), methodName);
+
     }
 }

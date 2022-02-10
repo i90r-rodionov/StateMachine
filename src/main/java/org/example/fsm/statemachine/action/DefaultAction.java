@@ -7,13 +7,11 @@ import org.example.fsm.statemachine.state.FsmState;
 import org.springframework.statemachine.StateContext;
 import org.springframework.stereotype.Service;
 
-
-@Service("createEcmFolderAction")
-public class CreateEcmFolderAction extends SaveStateAction {
+public class DefaultAction extends SaveStateAction {
 
     private final MockService service;
 
-    public CreateEcmFolderAction(StateHolder stateHolder, MockService service) {
+    public DefaultAction(StateHolder stateHolder, MockService service) {
         super(stateHolder);
         this.service = service;
     }

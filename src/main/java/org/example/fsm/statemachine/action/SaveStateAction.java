@@ -7,7 +7,7 @@ import org.springframework.statemachine.StateContext;
 import org.springframework.stereotype.Service;
 
 
-@Service
+@Service("saveStateAction")
 public class SaveStateAction extends BaseAction {
 
     public SaveStateAction(StateHolder stateHolder) {

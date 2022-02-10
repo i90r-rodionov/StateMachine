@@ -12,7 +12,7 @@ import java.util.UUID;
 
 @Component
 public class StateHolder {
-    private FsmState state = FsmState.CREATE;
+    private FsmState state = FsmState.CREATED;
 
     private static final Map<UUID, StateMachine<FsmState, FsmEvent>> MAP = new HashMap<>();
 

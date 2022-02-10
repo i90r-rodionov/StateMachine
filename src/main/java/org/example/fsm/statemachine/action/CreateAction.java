@@ -8,12 +8,12 @@ import org.springframework.statemachine.StateContext;
 import org.springframework.stereotype.Service;
 
 
-@Service("createEcmFolderAction")
-public class CreateEcmFolderAction extends SaveStateAction {
+@Service("createAction")
+public class CreateAction extends SaveStateAction {
 
     private final MockService service;
 
-    public CreateEcmFolderAction(StateHolder stateHolder, MockService service) {
+    public CreateAction(StateHolder stateHolder, MockService service) {
         super(stateHolder);
         this.service = service;
     }
@@ -21,15 +21,17 @@ public class CreateEcmFolderAction extends SaveStateAction {
     @Override
     public void execute(final StateContext<FsmState, FsmEvent> context) {
 
-        trace();
-
         boolean success = service.defaultAction();
 
+        String methodName = String.format("[%s].[%s]",
+                this.getClass().getSimpleName(),
+                this.getClass().getEnclosingMethod().getName());
+
         if (!success) {
-            System.out.println("   ### Process Error");
+            System.out.printf("   ### [%s] Error%n", methodName);
             throw new RuntimeException(this.getClass().getSimpleName() + " Error");
         }
-        System.out.println("   ### Process Successful");
+        System.out.printf("   ### [%s]%n", methodName);
 
         super.execute(context);
     }

@@ -1,6 +1,6 @@
 package org.example.fsm.statemachine.action;
 
-import org.example.fsm.integration.service.EcmIntegration;
+import org.example.fsm.service.mock.MockService;
 import org.example.fsm.statemachine.event.FsmEvent;
 import org.example.fsm.statemachine.persist.StateHolder;
 import org.example.fsm.statemachine.state.FsmState;
@@ -8,12 +8,12 @@ import org.springframework.statemachine.StateContext;
 import org.springframework.stereotype.Service;
 
 
-@Service
-public class MoveFilesToEcmAction extends SaveStateAction {
+@Service("createTaskInPegaAction")
+public class CreateTaskInPegaAction extends SaveStateAction {
 
-    private final EcmIntegration service;
+    private final MockService service;
 
-    public MoveFilesToEcmAction(StateHolder stateHolder, EcmIntegration service) {
+    public CreateTaskInPegaAction(StateHolder stateHolder, MockService service) {
         super(stateHolder);
         this.service = service;
     }
@@ -21,17 +21,15 @@ public class MoveFilesToEcmAction extends SaveStateAction {
     @Override
     public void execute(final StateContext<FsmState, FsmEvent> context) {
 
-        boolean success = service.moveFiles();
+        trace();
 
-        String methodName = String.format("[%s].[%s]",
-                this.getClass().getSimpleName(),
-                this.getClass().getEnclosingMethod().getName());
+        boolean success = service.defaultAction();
 
         if (!success) {
-            System.out.printf("   ### [%s] Error%n", methodName);
+            System.out.println("   ### Process Error");
             throw new RuntimeException(this.getClass().getSimpleName() + " Error");
         }
-        System.out.printf("   ### [%s]%n", methodName);
+        System.out.println("   ### Process Successful");
 
         super.execute(context);
     }

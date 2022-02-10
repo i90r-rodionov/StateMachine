@@ -6,8 +6,8 @@ import org.springframework.statemachine.StateContext;
 import org.springframework.stereotype.Service;
 
 
-@Service("checkReadyToSign")
-public class ReadyToSignGuard extends BaseGuard {
+@Service
+public class DefaultGuard extends BaseGuard {
 
     @Override
     public boolean evaluate(StateContext<FsmState, FsmEvent> context) {

@@ -59,7 +59,7 @@ public class FsmApplicationListener implements StateMachineListener<FsmState, Fs
     public void transitionEnded(final Transition<FsmState, FsmEvent> transition) {
         if (transition.getKind() == TransitionKind.INITIAL) return;
         String eventName = Objects.nonNull(transition.getTrigger().getEvent()) ? transition.getTrigger().getEvent().name() : "";
-        System.out.printf("   ... transitionEnded [%s] -> [%s] [%s]%n",
+        System.out.printf("   ... transitionEnded [%s] -> [%s] event=[%s]%n",
                 transition.getSource().getId(), transition.getTarget().getId(),
                 eventName);
     }
