@@ -1,5 +1,4 @@
 # Statemachine
-Spring State Machine Wellcome!
+Spring State Machine Demo
 
-This webapp is a purchase abstraction. App used Spring StateMachine Framework for implementation 
-finite state machine theory 
+App used Spring StateMachine Framework for implementation finite state machine theory 
