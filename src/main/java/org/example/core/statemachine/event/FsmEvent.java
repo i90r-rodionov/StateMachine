@@ -8,6 +8,8 @@ public enum FsmEvent {
     ECM_CALLBACK(null),
     PEGA_CALLBACK(null),
     PEGA_STATUS(null),
+    NEXT_EVENT(null),
+    SLA_EVENT(null),
     EXIT_EVENT(null);
 
     private final String externalCode;

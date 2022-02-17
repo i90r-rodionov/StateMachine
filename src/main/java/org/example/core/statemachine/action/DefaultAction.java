@@ -1,6 +1,6 @@
 package org.example.core.statemachine.action;
 
-import org.example.core.service.mock.MockService;
+import org.example.core.service.mock.CheckService;
 import org.example.core.statemachine.event.FsmEvent;
 import org.example.core.statemachine.persist.StateHolder;
 import org.example.core.statemachine.state.FsmState;
@@ -10,9 +10,9 @@ import org.springframework.stereotype.Component;
 @Component("defaultAction")
 public class DefaultAction extends BaseAction {
 
-    private final MockService service;
+    private final CheckService service;
 
-    public DefaultAction(StateHolder stateHolder, MockService service) {
+    public DefaultAction(StateHolder stateHolder, CheckService service) {
         super(stateHolder);
         this.service = service;
     }

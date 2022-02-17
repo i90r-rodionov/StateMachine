@@ -3,15 +3,14 @@ package org.example.core.statemachine;
 import lombok.extern.slf4j.Slf4j;
 import org.example.core.config.CoreConfig;
 import org.example.core.config.StateMachineConfig;
+import org.example.core.service.mock.CheckService;
 import org.example.core.statemachine.event.FsmEvent;
 import org.example.core.statemachine.state.FsmState;
 import org.example.domain.config.DomainConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.Bean;
 import org.springframework.statemachine.StateMachine;
 import org.springframework.statemachine.StateMachineContext;
 import org.springframework.statemachine.action.Action;
@@ -27,6 +26,9 @@ public abstract class AbstractFsmTest {
     @Autowired
     protected StateMachineFactory<FsmState, FsmEvent> stateMachineFactory;
 
+    @MockBean(name = "integrationService")
+    protected CheckService mockService;
+
     @MockBean(name = "checkReadyToPrint")
     protected Guard<FsmState, FsmEvent> checkReadyToPrint;
 
@@ -36,11 +38,11 @@ public abstract class AbstractFsmTest {
     @MockBean( name = "checkSignedFiles")
     protected Guard<FsmState, FsmEvent> checkSignedFiles;
 
-    @MockBean( name = "checkCreatedFolder")
-    protected Guard<FsmState, FsmEvent> checkCreatedFolder;
+//    @MockBean( name = "checkCreatedFolderOrSla")
+//    protected Guard<FsmState, FsmEvent> checkCreatedFolderOrSla;
 
-    @MockBean( name = "checkMovedFiles")
-    protected Guard<FsmState, FsmEvent> checkMovedFiles;
+//    @MockBean( name = "checkMovedFiles")
+//    protected Guard<FsmState, FsmEvent> checkMovedFiles;
 
     @MockBean( name = "checkDeliveredFiles")
     protected Guard<FsmState, FsmEvent> checkDeliveredFiles;
@@ -69,6 +71,7 @@ public abstract class AbstractFsmTest {
 
 
     protected StateMachine<FsmState, FsmEvent> getStateMachine(FsmState fsmState) {
+        log.debug("getStateMachine with state[{}]", fsmState);
         final StateMachine<FsmState, FsmEvent> stateMachine = stateMachineFactory.getStateMachine();
         final StateMachineContext<FsmState, FsmEvent> context = getCxt(fsmState);
 

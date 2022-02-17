@@ -1,5 +1,6 @@
 package org.example.core.statemachine.listener;
 
+import lombok.extern.slf4j.Slf4j;
 import org.example.core.statemachine.event.FsmEvent;
 import org.example.core.statemachine.state.FsmState;
 import org.springframework.messaging.Message;
@@ -12,34 +13,35 @@ import org.springframework.statemachine.transition.TransitionKind;
 
 import java.util.Objects;
 
+@Slf4j
 public class FsmApplicationListener implements StateMachineListener<FsmState, FsmEvent> {
     @Override
     public void stateChanged(final State<FsmState, FsmEvent> from, final State<FsmState, FsmEvent> to) {
-//        System.out.println("...  stateChanged");
+//        log.debug("...  stateChanged");
         if (from != null && from.getId() != null) {
-            System.out.printf("   ... stateChanged from=[%s] to [%s]%n", from.getId(), to.getId());
+            log.debug("   ... stateChanged from=[{}] to [{}]", from.getId(), to.getId());
         }
     }
 
     @Override
     public void stateEntered(final State<FsmState, FsmEvent> state) {
-        System.out.printf("   ... stateEntered = [%s]%n", state.getId());
+        log.debug("   ... stateEntered = [{}]", state.getId());
     }
 
     @Override
     public void stateExited(final State<FsmState, FsmEvent> state) {
-        System.out.printf("   ... stateExited = [%s]%n", state.getId());
+        log.debug("   ... stateExited = [{}]", state.getId());
     }
 
     @Override
     public void eventNotAccepted(final Message<FsmEvent> event) {
-        System.out.println("   ...  eventNotAccepted: " + event.getPayload());
+        log.debug("   ...  eventNotAccepted: " + event.getPayload());
     }
 
     @Override
     public void transition(final Transition<FsmState, FsmEvent> transition) {
         if (transition.getKind() == TransitionKind.INITIAL) return;
-        System.out.printf("   ... transition from [%s] to [%s] with trigger [%s]%n",
+        log.debug("   ... transition from [{}] to [{}] with trigger [{}]",
                 Objects.nonNull(transition.getSource()) ? transition.getSource().getId() : null,
                 Objects.nonNull(transition.getTarget()) ? transition.getTarget().getId() : null,
                 Objects.nonNull(transition.getTrigger().getEvent()) ? transition.getTrigger().getEvent().name() : null
@@ -50,7 +52,7 @@ public class FsmApplicationListener implements StateMachineListener<FsmState, Fs
     @Override
     public void transitionStarted(final Transition<FsmState, FsmEvent> transition) {
         if (transition.getKind() == TransitionKind.INITIAL) return;
-        System.out.printf("   ... transitionStarted [%s] -> [%s] [%s]%n",
+        log.debug("   ... transitionStarted [{}] -> [{}] [{}]",
                 transition.getSource().getId(), transition.getTarget().getId(),
                 transition.getTrigger());
     }
@@ -59,29 +61,29 @@ public class FsmApplicationListener implements StateMachineListener<FsmState, Fs
     public void transitionEnded(final Transition<FsmState, FsmEvent> transition) {
         if (transition.getKind() == TransitionKind.INITIAL) return;
         String eventName = Objects.nonNull(transition.getTrigger().getEvent()) ? transition.getTrigger().getEvent().name() : "";
-        System.out.printf("   ... transitionEnded [%s] -> [%s] event=[%s]%n",
+        log.debug("   ... transitionEnded [{}] -> [{}] event=[{}]",
                 transition.getSource().getId(), transition.getTarget().getId(),
                 eventName);
     }
 
     @Override
     public void stateMachineStarted(final StateMachine<FsmState, FsmEvent> stateMachine) {
-        System.out.println("   ... stateMachineStarted " + stateMachine.getUuid());
+        log.debug("   ... stateMachineStarted {}", stateMachine.getUuid());
     }
 
     @Override
     public void stateMachineStopped(final StateMachine<FsmState, FsmEvent> stateMachine) {
-        System.out.println("   ... stateMachineStopped " + stateMachine.getUuid());
+        log.debug("   ... stateMachineStopped {}", stateMachine.getUuid());
     }
 
     @Override
     public void stateMachineError(final StateMachine<FsmState, FsmEvent> stateMachine, Exception exception) {
-        System.out.println("   ... stateMachineError");
+        log.debug("   ... stateMachineError");
     }
 
     @Override
     public void extendedStateChanged(final Object key, final Object value) {
-        System.out.println("   ... extendedStateChanged [" + key + " :" + value + "]");
+        log.debug("   ... extendedStateChanged [{}]:[{}]", key, value);
     }
 
     @Override
@@ -90,6 +92,6 @@ public class FsmApplicationListener implements StateMachineListener<FsmState, Fs
 //        if (exit != null && exit) {
 //            stateContext.getStateMachine().sendEvent(PurchaseEvent.EXIT_EVENT);
 //        }
-//        System.out.println(String.format("   ... stateContext=[%s]", stateContext));
+//        log.debug(String.format("   ... stateContext=[{}]", stateContext));
     }
 }

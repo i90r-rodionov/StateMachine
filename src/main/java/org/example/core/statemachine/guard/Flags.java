@@ -15,7 +15,7 @@ public class Flags {
     private boolean readyToPrintFlag = true;
     private boolean readyToSignFlag = true;
     private boolean filesSignedFlag = true;
-    private boolean createdFolderFlag;
+    private boolean createdFolderFlag = true;
     private boolean movedFilesFlag;
     private boolean createdEcmFolderFlag;
     private boolean filesDeliveredFlag;

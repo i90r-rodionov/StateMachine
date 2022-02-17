@@ -38,7 +38,7 @@ public class DefaultFsmService implements FsmService {
 
     @Override
     public boolean sendEvent(FsmEvent event, String id) {
-        LOG.debug("Start sendEvent");
+        log.debug("   --- Start sendEvent");
         StateMachine<FsmState, FsmEvent> stateMachine = getSM();
 
         //StateMachine<FsmState, FsmEvent> stateMachine = stateMachineFactory.getStateMachine();

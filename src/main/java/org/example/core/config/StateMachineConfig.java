@@ -3,11 +3,11 @@ package org.example.core.config;
 import lombok.RequiredArgsConstructor;
 import org.example.core.statemachine.StateMachineScanMarker;
 import org.example.core.statemachine.event.FsmEvent;
+import org.example.core.statemachine.listener.FsmApplicationListener;
+import org.example.core.statemachine.persist.FsmPersister;
 import org.example.core.statemachine.state.FsmState;
 import org.example.domain.DomainScanMarker;
 import org.example.domain.repository.LoanApplicationRepository;
-import org.example.core.statemachine.listener.FsmApplicationListener;
-import org.example.core.statemachine.persist.FsmPersister;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -31,17 +31,15 @@ import static org.example.core.statemachine.state.FsmState.*;
 public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<FsmState, FsmEvent> {
 
     // Задержка для потворяющихся действий
-    public static final long RETRY_DELAY = 15000L;
-    // Задержка для первой попытки повтора
-    public static final long RETRY_START_DELAY = 1000L;
+    public static final long RETRY_DELAY = 3000L;
 
     private final LoanApplicationRepository repository;
 
     private final Guard<FsmState, FsmEvent> checkReadyToPrint;
     private final Guard<FsmState, FsmEvent> checkReadyToSign;
     private final Guard<FsmState, FsmEvent> checkSignedFiles;
-    private final Guard<FsmState, FsmEvent> checkCreatedFolder;
-    private final Guard<FsmState, FsmEvent> checkMovedFiles;
+    private final Guard<FsmState, FsmEvent> checkCreatedFolderOrSla;
+    private final Guard<FsmState, FsmEvent> checkMovedFilesOrSla;
     private final Guard<FsmState, FsmEvent> checkDeliveredFiles;
     private final Guard<FsmState, FsmEvent> checkResendFiles;
     private final Guard<FsmState, FsmEvent> checkCreatedTaskInPega;
@@ -99,6 +97,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<FsmSta
 
     @Override
     public void configure(StateMachineTransitionConfigurer<FsmState, FsmEvent> transitions) throws Exception {
+
         // to READY_TO_PRINT
         transitions
                 .withExternal()
@@ -106,7 +105,6 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<FsmSta
                 .event(CHECK_READY_TO_PRINT)
                 .guard(checkReadyToPrint)
                 .action(saveStateAction);
-
 
         // to READY_TO_SIGN
         transitions
@@ -137,6 +135,39 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<FsmSta
         // - -(sla)-> SLA_ERROR
         // - папка создана ? --> ECM_FOLDER : создание папки в ECM (retry)
         transitions
+                // SIGNED(?retry:?sla) -> (next:sla_error)
+                .withInternal()
+                .name("checkOnSigned")
+                .source(SIGNED)
+                .timer(RETRY_DELAY)
+                .guard(checkCreatedFolderOrSla)
+                .action(createEcmFolderAction, createEcmFolderErrorAction)
+                .and()
+
+                // next: SIGNED -> ECM_FOLDER
+                .withLocal()
+                .name("toEcmFolder")
+                .source(FsmState.SIGNED).target(FsmState.ECM_FOLDER)
+                //.timer(RETRY_DELAY)
+                //.guard(checkCreatedFolder)
+                .event(NEXT_EVENT)
+                .action(createEcmFolderAction, createEcmFolderErrorAction)
+                .and()
+
+                // to SLA_ERROR on time
+                .withLocal()
+                .name("signToSla")
+                .source(FsmState.SIGNED).target(SLA_ERROR)
+                //.timer(getSlaForState(FsmState.SIGNED))
+                .event(SLA_EVENT)
+                //.guard(checkSla)
+                .action(slaDefaultAction, slaErrorAction)
+
+        ;
+
+
+        // from ECM_FOLDER
+        transitions
                 // - to ECM_FOLDER (retry)
 //                .withLocal()
 //                .name("AAA")
@@ -146,51 +177,64 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<FsmSta
 //                .action(createEcmFolderAction, createEcmFolderErrorAction)
 //                .and()
 
+                // ECM_FOLDER (?retry:?sla) -> (next:sla_error)
+                .withInternal()
+                .name("checkOnEcmFolder")
+                .source(ECM_FOLDER)
+                .timer(RETRY_DELAY)
+                .guard(checkMovedFilesOrSla)
+                .action(createEcmFolderAction, createEcmFolderErrorAction)
+                .and()
+
+                // next: SIGNED -> ECM_FOLDER
                 .withLocal()
                 .name("toEcmFolder")
                 .source(FsmState.SIGNED).target(FsmState.ECM_FOLDER)
-                .timer(RETRY_DELAY)
-                .guard(checkCreatedFolder)
+                //.timer(RETRY_DELAY)
+                //.guard(checkCreatedFolder)
+                .event(NEXT_EVENT)
                 .action(createEcmFolderAction, createEcmFolderErrorAction)
                 .and()
 
                 // to SLA_ERROR on time
                 .withLocal()
-                .name("sgnToSla")
+                .name("signToSla")
                 .source(FsmState.SIGNED).target(SLA_ERROR)
-                .timer(getSlaForState(FsmState.SIGNED))
+                //.timer(getSlaForState(FsmState.SIGNED))
+                .event(SLA_EVENT)
                 .guard(checkSla)
                 .action(slaDefaultAction, slaErrorAction)
 
         ;
 
 
-        // from ECM_FOLDER
+
         // - -(sla)-> SLA_ERROR
         // файлы переложены ? --> ECM_SEND : передлжить файлы в ECM (retry)
-        transitions
-                // to SLA_ERROR on time
-                .withLocal()
-                .source(ECM_FOLDER).target(SLA_ERROR)
-                .timer(getSlaForState(ECM_FOLDER))
-                .action(slaDefaultAction, slaErrorAction)
-                .and()
+//        transitions
+//                // to SLA_ERROR on time
+//                .withLocal()
+//                .source(ECM_FOLDER).target(SLA_ERROR)
+//                .timer(getSlaForState(ECM_FOLDER))
+//                .action(slaDefaultAction, slaErrorAction)
+//                .and()
+//
+//                // - to ECM_SEND (retry)
+//                .withLocal()
+//                .source(ECM_FOLDER).target(ECM_SEND)
+//                .timerOnce(RETRY_START_DELAY)
+//                .guard(checkMovedFiles)
+//                .action(moveFilesToEcmFolderAction, moveFilesToEcmFolderErrorAction)
+//                .and()
+//
+//                .withLocal()
+//                .source(ECM_FOLDER).target(ECM_SEND)
+//                .timer(RETRY_DELAY)
+//                .guard(checkMovedFiles)
+//                .action(moveFilesToEcmFolderAction, moveFilesToEcmFolderErrorAction)
+//                .and();
 
-                // - to ECM_SEND (retry)
-                .withLocal()
-                .source(ECM_FOLDER).target(ECM_SEND)
-                .timerOnce(RETRY_START_DELAY)
-                .guard(checkMovedFiles)
-                .action(moveFilesToEcmFolderAction, moveFilesToEcmFolderErrorAction)
-                .and()
-
-                .withLocal()
-                .source(ECM_FOLDER).target(ECM_SEND)
-                .timer(RETRY_DELAY)
-                .guard(checkMovedFiles)
-                .action(moveFilesToEcmFolderAction, moveFilesToEcmFolderErrorAction)
-                .and();
-/*
+        /*
         // from ECM_SEND
         // - -(sla)-> SLA_ERROR
         // (ecm_callback) :
@@ -360,7 +404,6 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<FsmSta
                 .withLocal()
                 .source(BUSINESS_ERROR).target(EXIT)
                 .event(FsmEvent.EXIT_EVENT)
-                .guard(null)
                 .action(saveStateAction)
                 .and()
 
@@ -368,7 +411,6 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<FsmSta
                 .source(SLA_ERROR).target(EXIT)
                 .timer(180000L)
                 .action(saveStateAction);
-
 
 
     }

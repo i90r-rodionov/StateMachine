@@ -1,12 +1,16 @@
 package org.example.core.statemachine.action;
 
+import lombok.extern.slf4j.Slf4j;
 import org.example.core.statemachine.event.FsmEvent;
-import org.example.core.statemachine.state.FsmState;
 import org.example.core.statemachine.persist.StateHolder;
+import org.example.core.statemachine.state.FsmState;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.statemachine.StateContext;
 import org.springframework.statemachine.action.Action;
+import reactor.core.publisher.Mono;
 
-
+@Slf4j
 abstract public class BaseAction implements Action<FsmState, FsmEvent> {
 
     private final StateHolder stateHolder;
@@ -18,7 +22,7 @@ abstract public class BaseAction implements Action<FsmState, FsmEvent> {
     @Override
     public void execute(final StateContext<FsmState, FsmEvent> context) {
 
-        System.out.printf("   ### execute [%s] sourceState=[%s] targetState [%s]%n",
+        log.debug("   ### execute [{}] sourceState=[{}] targetState [{}]",
                 this.getClass().getSimpleName(), context.getSource().getId().name(), context.getTarget().getId().name());
 
         stateHolder.setState(context.getTarget().getId());
@@ -31,7 +35,23 @@ abstract public class BaseAction implements Action<FsmState, FsmEvent> {
     }
 
     protected void generateError() {
-        System.out.printf("   ### Error in [%s]%n", this.getClass().getSimpleName());
+        log.debug("   ### Error in [{}]", this.getClass().getSimpleName());
         throw new RuntimeException(this.getClass().getSimpleName() + " Error");
+    }
+
+    protected boolean isSla(final StateContext<FsmState, FsmEvent> context) {
+        return false;
+    }
+
+    protected void sendEvent(final StateContext<FsmState, FsmEvent> context, FsmEvent event) {
+
+        Message<FsmEvent> fsmEventMessage =
+                MessageBuilder
+                        .withPayload(event)
+                        .build();
+
+        context.getStateMachine().sendEvent(Mono.just(fsmEventMessage)).subscribe();
+
+        log.debug("   ### Action sendEvent=[{}]", event.name());
     }
 }
