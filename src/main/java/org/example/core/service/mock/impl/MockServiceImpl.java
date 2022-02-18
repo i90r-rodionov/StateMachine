@@ -52,6 +52,21 @@ public class MockServiceImpl implements CheckService {
     }
 
     @Override
+    public boolean checkDeliveredFiles() {
+        return false;
+    }
+
+    @Override
+    public boolean checkResendFiles() {
+        return false;
+    }
+
+    @Override
+    public boolean checkCreatedTask() {
+        return false;
+    }
+
+    @Override
     public boolean checkSla() {
         trace();
 

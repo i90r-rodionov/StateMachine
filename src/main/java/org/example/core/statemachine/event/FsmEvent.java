@@ -9,6 +9,7 @@ public enum FsmEvent {
     PEGA_CALLBACK(null),
     PEGA_STATUS(null),
     NEXT_EVENT(null),
+    TIMER_EVENT(""),
     SLA_EVENT(null),
     EXIT_EVENT(null);
 

@@ -20,13 +20,15 @@ public class ReadyToSignTest extends AbstractFsmTest {
 
     @BeforeEach
     void setUp() {
-        machine = getStateMachine(FsmState.READY_TO_PRINT);
+
     }
 
     @Test
     void targetReadyToSignTrueTest() throws Exception {
 
-        Mockito.when(checkReadyToSign.evaluate(any(StateContext.class))).thenReturn(true);
+        Mockito.when(mockService.checkReadyToSign()).thenReturn(true);
+
+        machine = getStateMachine(FsmState.READY_TO_PRINT);
 
         StateMachineTestPlan<FsmState, FsmEvent> plan =
                 StateMachineTestPlanBuilder.<FsmState, FsmEvent>builder()
@@ -45,7 +47,9 @@ public class ReadyToSignTest extends AbstractFsmTest {
     @Test
     void targetReadyToSignFalseTest() throws Exception {
 
-        Mockito.when(checkReadyToSign.evaluate(any(StateContext.class))).thenReturn(false);
+        Mockito.when(mockService.checkReadyToSign()).thenReturn(false);
+
+        machine = getStateMachine(FsmState.READY_TO_PRINT);
 
         StateMachineTestPlan<FsmState, FsmEvent> plan =
                 StateMachineTestPlanBuilder.<FsmState, FsmEvent>builder()

@@ -11,16 +11,17 @@ import org.springframework.stereotype.Component;
 
 
 @Component("checkMovedFilesOrSla")
-@RequiredArgsConstructor
 @Slf4j
 public class MoveFilesGuard extends BaseGuard {
 
-    private final CheckService service;
+    public MoveFilesGuard(CheckService checkService) {
+        super(checkService);
+    }
 
     @Override
     public boolean evaluate(StateContext<FsmState, FsmEvent> context) {
 
-        boolean flag = service.checkMovedFiles();
+        boolean flag = getCheckService().checkMovedFiles();
 
         if (!flag && checkSla(context)) {
             context.getExtendedState().getVariables().put(FsmHelper.SLA_FLAG, true);
@@ -34,7 +35,7 @@ public class MoveFilesGuard extends BaseGuard {
     @Override
     protected boolean checkSla(StateContext<FsmState, FsmEvent> context) {
         // TODO
-        return service.checkSla();
+        return getCheckService().checkSla();
     }
 
 }

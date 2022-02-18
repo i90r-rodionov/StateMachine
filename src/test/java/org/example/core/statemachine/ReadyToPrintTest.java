@@ -26,7 +26,7 @@ public class ReadyToPrintTest extends AbstractFsmTest {
     @Test
     void targetReadyToPrintTrueTest() throws Exception {
 
-        Mockito.when(checkReadyToPrint.evaluate(any(StateContext.class))).thenReturn(true);
+        Mockito.when(mockService.checkReadyToPrint()).thenReturn(true);
 
         StateMachineTestPlan<FsmState, FsmEvent> plan =
                 StateMachineTestPlanBuilder.<FsmState, FsmEvent>builder()
@@ -46,7 +46,7 @@ public class ReadyToPrintTest extends AbstractFsmTest {
     @Test
     void targetReadyToPrintFalseTest() throws Exception {
 
-        Mockito.when(checkReadyToPrint.evaluate(any(StateContext.class))).thenReturn(false);
+        Mockito.when(mockService.checkReadyToPrint()).thenReturn(false);
 
         StateMachineTestPlan<FsmState, FsmEvent> plan =
                 StateMachineTestPlanBuilder.<FsmState, FsmEvent>builder()

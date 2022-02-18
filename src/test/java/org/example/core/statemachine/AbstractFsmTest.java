@@ -26,44 +26,8 @@ public abstract class AbstractFsmTest {
     @Autowired
     protected StateMachineFactory<FsmState, FsmEvent> stateMachineFactory;
 
-    @MockBean(name = "integrationService")
+    @MockBean
     protected CheckService mockService;
-
-    @MockBean(name = "checkReadyToPrint")
-    protected Guard<FsmState, FsmEvent> checkReadyToPrint;
-
-    @MockBean(name = "checkReadyToSign")
-    protected Guard<FsmState, FsmEvent> checkReadyToSign;
-
-    @MockBean( name = "checkSignedFiles")
-    protected Guard<FsmState, FsmEvent> checkSignedFiles;
-
-//    @MockBean( name = "checkCreatedFolderOrSla")
-//    protected Guard<FsmState, FsmEvent> checkCreatedFolderOrSla;
-
-//    @MockBean( name = "checkMovedFiles")
-//    protected Guard<FsmState, FsmEvent> checkMovedFiles;
-
-    @MockBean( name = "checkDeliveredFiles")
-    protected Guard<FsmState, FsmEvent> checkDeliveredFiles;
-
-    @MockBean( name = "checkResendFiles")
-    protected Guard<FsmState, FsmEvent> checkResendFiles;
-
-    @MockBean( name = "checkCreatedTaskInPega")
-    protected Guard<FsmState, FsmEvent> checkCreatedTaskInPega;
-
-    @MockBean( name = "checkCreatedTask")
-    protected Guard<FsmState, FsmEvent> checkCreatedTask;
-
-    @MockBean( name = "checkProcessedApplication")
-    protected Guard<FsmState, FsmEvent> checkProcessedApplication;
-
-    @MockBean( name = "checkSignedBank")
-    protected Guard<FsmState, FsmEvent> checkSignedBank;
-
-    @MockBean( name = "checkSla")
-    protected Guard<FsmState, FsmEvent> checkSla;
 
     @MockBean(name = "saveStateAction")
     protected Action<FsmState, FsmEvent> saveStateAction;

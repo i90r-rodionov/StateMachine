@@ -20,8 +20,7 @@ public class FromReadyToSignTest extends AbstractFsmTest {
 
     @BeforeEach
     void setUp() {
-        // from READY_TO_SIGN
-        machine = getStateMachine(FsmState.READY_TO_SIGN);
+
     }
 
     @Test
@@ -29,7 +28,11 @@ public class FromReadyToSignTest extends AbstractFsmTest {
 
         // READY_TO_SIGN -> CHECK_FILES_SIGNED(+) -> SIGNED
 
-        Mockito.when(checkSignedFiles.evaluate(any(StateContext.class))).thenReturn(true);
+        Mockito.when(mockService.checkSignedFiles()).thenReturn(true);
+
+        // from READY_TO_SIGN
+        machine = getStateMachine(FsmState.READY_TO_SIGN);
+
 
         StateMachineTestPlan<FsmState, FsmEvent> plan =
                 StateMachineTestPlanBuilder.<FsmState, FsmEvent>builder()
@@ -50,8 +53,10 @@ public class FromReadyToSignTest extends AbstractFsmTest {
 
         // READY_TO_SIGN -> CHECK_FILES_SIGNED(-) -> BUSINESS_ERROR
 
-        Mockito.when(checkSignedFiles.evaluate(any(StateContext.class))).thenReturn(false);
+        Mockito.when(mockService.checkSignedFiles()).thenReturn(false);
 
+        // from READY_TO_SIGN
+        machine = getStateMachine(FsmState.READY_TO_SIGN);
 
         StateMachineTestPlan<FsmState, FsmEvent> plan =
                 StateMachineTestPlanBuilder.<FsmState, FsmEvent>builder()
