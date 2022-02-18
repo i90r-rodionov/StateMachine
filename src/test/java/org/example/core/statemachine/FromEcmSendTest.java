@@ -5,15 +5,11 @@ import org.example.core.statemachine.event.FsmEvent;
 import org.example.core.statemachine.state.FsmState;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.springframework.messaging.Message;
-import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.statemachine.StateMachine;
-import org.springframework.statemachine.StateMachineMessageHeaders;
 import org.springframework.statemachine.test.StateMachineTestPlan;
 import org.springframework.statemachine.test.StateMachineTestPlanBuilder;
 
 import static org.example.core.statemachine.event.FsmEvent.ECM_CALLBACK;
-import static org.example.core.statemachine.event.FsmEvent.TIMER_EVENT;
 
 /**
  *
@@ -33,12 +29,6 @@ public class FromEcmSendTest extends AbstractFsmTest {
 
         Mockito.when(mockService.checkSla()).thenReturn(true);
         //
-        Message<FsmEvent> fsmEventMessage =
-                MessageBuilder
-                        .withPayload(TIMER_EVENT)
-                        .setHeader(StateMachineMessageHeaders.HEADER_DO_ACTION_TIMEOUT, 5000)
-                        .build();
-
         // from ECM_SEND
         machine = getStateMachine(FsmState.ECM_SEND);
 
@@ -47,7 +37,7 @@ public class FromEcmSendTest extends AbstractFsmTest {
                         .defaultAwaitTime(1)
                         .stateMachine(machine)
                         .step()
-                        .sendEvent(TIMER_EVENT)
+                        .sendEvent(timerFsmEventMessage)
                         .expectState(FsmState.SLA_ERROR)
                         .expectStateChanged(1)
                         .expectTransition(2)

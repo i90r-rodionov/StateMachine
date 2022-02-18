@@ -8,17 +8,22 @@ import org.example.core.statemachine.event.FsmEvent;
 import org.example.core.statemachine.state.FsmState;
 import org.example.domain.config.DomainConfig;
 import org.junit.jupiter.api.BeforeEach;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.statemachine.StateMachine;
 import org.springframework.statemachine.StateMachineContext;
+import org.springframework.statemachine.StateMachineMessageHeaders;
 import org.springframework.statemachine.action.Action;
 import org.springframework.statemachine.config.StateMachineFactory;
-import org.springframework.statemachine.guard.Guard;
 import org.springframework.statemachine.support.DefaultStateMachineContext;
+
+import static org.example.core.statemachine.event.FsmEvent.TIMER_EVENT;
 
 @EnableAutoConfiguration
 @SpringBootTest(classes = {CoreConfig.class, StateMachineConfig.class, DomainConfig.class})
@@ -36,13 +41,21 @@ public abstract class AbstractFsmTest {
     @MockBean(name = "saveStateAction")
     protected Action<FsmState, FsmEvent> saveStateAction;
 
+    protected Message<FsmEvent> timerFsmEventMessage = MessageBuilder
+            .withPayload(TIMER_EVENT)
+            .setHeader(StateMachineMessageHeaders.HEADER_DO_ACTION_TIMEOUT, 5000)
+            .build();
+
 
     @BeforeEach
     void setUp() {
         context = buildContext();
+
+        Mockito.when(mockService.defaultAction()).thenReturn(true);
+        Mockito.when(mockService.defaultErrorAction()).thenReturn(true);
     }
 
-    protected AnnotationConfigApplicationContext buildContext(){
+    protected AnnotationConfigApplicationContext buildContext() {
         return null;
     }
 

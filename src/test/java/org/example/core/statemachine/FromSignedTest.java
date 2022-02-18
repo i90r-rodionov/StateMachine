@@ -5,15 +5,9 @@ import org.example.core.statemachine.event.FsmEvent;
 import org.example.core.statemachine.state.FsmState;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
-import org.springframework.messaging.Message;
-import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.statemachine.StateMachine;
-import org.springframework.statemachine.StateMachineMessageHeaders;
 import org.springframework.statemachine.test.StateMachineTestPlan;
 import org.springframework.statemachine.test.StateMachineTestPlanBuilder;
-
-import static org.example.core.statemachine.event.FsmEvent.TIMER_EVENT;
-import static org.mockito.ArgumentMatchers.any;
 
 /**
  *
@@ -37,14 +31,6 @@ public class FromSignedTest extends AbstractFsmTest {
         Mockito.when(mockService.checkCreatedFolder()).thenReturn(true);
         Mockito.when(mockService.checkSla()).thenReturn(false);
 
-
-        //
-        Message<FsmEvent> fsmEventMessage =
-                MessageBuilder
-                        .withPayload(TIMER_EVENT)
-                        .setHeader(StateMachineMessageHeaders.HEADER_DO_ACTION_TIMEOUT, 5000)
-                        .build();
-
         // from SIGNED
         machine = getStateMachine(FsmState.SIGNED);
 
@@ -53,7 +39,7 @@ public class FromSignedTest extends AbstractFsmTest {
                         .defaultAwaitTime(1)
                         .stateMachine(machine)
                         .step()
-                        .sendEvent(TIMER_EVENT)
+                        .sendEvent(timerFsmEventMessage)
                         .expectState(FsmState.ECM_FOLDER_CREATED)
                         .expectStateChanged(1)
                         .expectTransition(2)
@@ -80,14 +66,6 @@ public class FromSignedTest extends AbstractFsmTest {
         Mockito.when(mockService.checkCreatedFolder()).thenReturn(false);
         Mockito.when(mockService.checkSla()).thenReturn(false);
 
-
-        //
-        Message<FsmEvent> fsmEventMessage =
-                MessageBuilder
-                        .withPayload(TIMER_EVENT)
-                        .setHeader(StateMachineMessageHeaders.HEADER_DO_ACTION_TIMEOUT, 5000)
-                        .build();
-
         // from SIGNED
         machine = getStateMachine(FsmState.SIGNED);
 
@@ -96,7 +74,7 @@ public class FromSignedTest extends AbstractFsmTest {
                         .defaultAwaitTime(1)
                         .stateMachine(machine)
                         .step()
-                        .sendEvent(fsmEventMessage)
+                        .sendEvent(timerFsmEventMessage)
                         .expectState(FsmState.SIGNED)
                         .expectStateChanged(0)
                         .expectTransition(0)
@@ -123,14 +101,6 @@ public class FromSignedTest extends AbstractFsmTest {
         Mockito.when(mockService.checkCreatedFolder()).thenReturn(false);
         Mockito.when(mockService.checkSla()).thenReturn(true);
 
-
-        //
-        Message<FsmEvent> fsmEventMessage =
-                MessageBuilder
-                        .withPayload(TIMER_EVENT)
-                        .setHeader(StateMachineMessageHeaders.HEADER_DO_ACTION_TIMEOUT, 5000)
-                        .build();
-
         // from SIGNED
         machine = getStateMachine(FsmState.SIGNED);
 
@@ -139,7 +109,7 @@ public class FromSignedTest extends AbstractFsmTest {
                         .defaultAwaitTime(1)
                         .stateMachine(machine)
                         .step()
-                        .sendEvent(fsmEventMessage)
+                        .sendEvent(timerFsmEventMessage)
                         .expectState(FsmState.SLA_ERROR)
                         .expectStateChanged(1)
                         .expectTransition(2)
