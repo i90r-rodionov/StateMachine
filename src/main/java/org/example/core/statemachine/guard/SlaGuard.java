@@ -9,15 +9,13 @@ import org.springframework.stereotype.Component;
 @Component("checkSla")
 public class SlaGuard extends BaseGuard {
 
-    Flags flags = Flags.getInstance();
-
     public SlaGuard(CheckService checkService) {
         super(checkService);
     }
 
     @Override
     public boolean evaluate(StateContext<FsmState, FsmEvent> context) {
-        boolean flag = false; //flags.isSlaFlag();
+        boolean flag = getCheckService().checkSla();
 
         setFlag(flag);
 

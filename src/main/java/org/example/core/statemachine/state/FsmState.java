@@ -6,7 +6,7 @@ public enum FsmState {
     READY_TO_PRINT,
     READY_TO_SIGN,
     SIGNED,
-    ECM_FOLDER,
+    ECM_FOLDER_CREATED,
     ECM_SEND,
     ECM_RECEIVE,
     PEGA_SEND,
@@ -20,8 +20,8 @@ public enum FsmState {
 
     // Проверка приложений на наличие подписи
     CHECK_FILES_SIGNED,
-    // Проверка отправленных в ECM файлов
-    CHECK_FILES_ECM_SENT,
+    // Проверка доставки файлов в ECM
+    CHECK_FILES_DELIVERED,
     // Проверка возможности повторной отправки файлов
     CHECK_FILES_RESEND,
     CHECK_TASK_CREATED,

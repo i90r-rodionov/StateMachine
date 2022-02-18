@@ -65,7 +65,8 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<FsmSta
     private final Action<FsmState, FsmEvent> onEcmSendAction;
     private final Action<FsmState, FsmEvent> onEcmSendErrorAction;
 
-    private final Action<FsmState, FsmEvent> createTaskInPegaAction;
+    private final Action<FsmState, FsmEvent> onDeliveredAction;
+
     private final Action<FsmState, FsmEvent> createTaskInPegaErrorAction;
     private final Action<FsmState, FsmEvent> exitAction;
 
@@ -89,10 +90,11 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<FsmSta
                 .state(FsmState.READY_TO_SIGN)
                 .choice(FsmState.CHECK_FILES_SIGNED)
                 .state(FsmState.SIGNED)
-                .state(FsmState.ECM_FOLDER)
+                .state(FsmState.ECM_FOLDER_CREATED)
                 .state(ECM_SEND)
-//                .choice(CHECK_FILES_ECM_SENT)
-//                .state(FsmState.ECM_RECEIVE)
+                .choice(CHECK_FILES_DELIVERED)
+                .choice(CHECK_FILES_RESEND)
+                .state(FsmState.ECM_RECEIVE)
 //                .state(FsmState.PEGA_SEND)
 //                .choice(FsmState.CHECK_TASK_CREATED)
 //                .state(FsmState.PEGA_RECEIVE)
@@ -101,8 +103,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<FsmSta
 //                .choice(FsmState.CHECK_BANK_SIGN)
 //                .state(FsmState.BANK_SIGNED)
                 .state(FsmState.BUSINESS_ERROR)
-                .state(SLA_ERROR)
-        ;
+                .state(SLA_ERROR);
     }
 
     @Override
@@ -157,7 +158,7 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<FsmSta
                 // next: SIGNED -> ECM_FOLDER
                 .withLocal()
                 .name("toEcmFolder")
-                .source(FsmState.SIGNED).target(FsmState.ECM_FOLDER)
+                .source(FsmState.SIGNED).target(FsmState.ECM_FOLDER_CREATED)
                 .event(NEXT_EVENT)
                 .action(onCreateFolderAction, onCreateFolderErrorAction)
                 .and()
@@ -170,22 +171,22 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<FsmSta
                 .action(slaDefaultAction, slaErrorAction);
 
 
-        // from ECM_FOLDER
+        // from ECM_FOLDER_CREATED
         transitions
-                // ECM_FOLDER (?retry:?sla) -> (next:sla_error)
+                // ECM_FOLDER_CREATED (?retry:?sla) -> (next:sla_error)
                 .withInternal()
                 .name("checkOnEcmFolder")
-                .source(ECM_FOLDER)
+                .source(ECM_FOLDER_CREATED)
                 .timer(RETRY_DELAY)
                 .event(TIMER_EVENT)
                 .guard(checkMovedFilesOrSla)
                 .action(onCheckAction, onCheckErrorAction)
                 .and()
 
-                // next: SIGNED -> ECM_FOLDER
+                // next: ECM_FOLDER_CREATED -> ECM_SEND
                 .withLocal()
                 .name("toEcmSend")
-                .source(ECM_FOLDER).target(ECM_SEND)
+                .source(ECM_FOLDER_CREATED).target(ECM_SEND)
                 .event(NEXT_EVENT)
                 .action(onEcmSendAction, onEcmSendErrorAction)
                 .and()
@@ -193,14 +194,14 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<FsmSta
                 // to SLA_ERROR on time
                 .withLocal()
                 .name("signToSla")
-                .source(ECM_FOLDER).target(SLA_ERROR)
+                .source(ECM_FOLDER_CREATED).target(SLA_ERROR)
                 .event(SLA_EVENT)
                 .guard(checkSla)
                 .action(slaDefaultAction, slaErrorAction);
 
         // from ECM_SEND
         transitions
-                // ECM_FOLDER (?retry:?sla) -> (next:sla_error)
+                // ECM_FOLDER (?sla) -> (sla_error)
                 .withInternal()
                 .name("checkOnEcmSend")
                 .source(ECM_SEND)
@@ -210,7 +211,37 @@ public class StateMachineConfig extends EnumStateMachineConfigurerAdapter<FsmSta
                 .action(onCheckAction, onCheckErrorAction)
                 .and()
 
-        ;
+                .withExternal()
+                .source(ECM_SEND).target(CHECK_FILES_DELIVERED)
+                .event(ECM_CALLBACK)
+                //.action(saveStateAction)
+                .and()
+
+                // - to ECM_RECEIVE
+                // - to CHECK_FILES_RESEND
+                .withChoice()
+                .source(CHECK_FILES_DELIVERED)
+                .first(ECM_RECEIVE, checkDeliveredFiles, onDeliveredAction, onCreateFolderErrorAction)
+                .last(CHECK_FILES_RESEND)
+                .and()
+
+                // - to ECM_FOLDER_CREATED
+                // - to BUSINESS_ERROR
+                .withChoice()
+                .source(CHECK_FILES_RESEND)
+                .first(ECM_FOLDER_CREATED, checkResendFiles, onCreateFolderAction, onCreateFolderErrorAction)
+                .last(BUSINESS_ERROR, saveStateAction)
+                .and()
+
+                // to SLA_ERROR on time
+                .withLocal()
+                .name("ecmSendToSla")
+                .source(ECM_SEND).target(SLA_ERROR)
+                .event(SLA_EVENT)
+                .guard(checkSla)
+                .action(slaDefaultAction, slaErrorAction);
+
+
 
         // to EXIT
         transitions

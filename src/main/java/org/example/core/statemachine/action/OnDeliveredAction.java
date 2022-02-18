@@ -8,18 +8,23 @@ import org.springframework.statemachine.StateContext;
 import org.springframework.stereotype.Component;
 
 
-@Component("createTaskInPegaAction")
-public class CreateTaskInPegaAction extends BaseAction {
+/**
+ * Реализация перехода ECM_SEND -> ECM_RECEIVE
+ *
+ */
+@Component
+public class OnDeliveredAction extends BaseAction {
 
     private final CheckService service;
 
-    public CreateTaskInPegaAction(StateHolder stateHolder, CheckService service) {
+    public OnDeliveredAction(StateHolder stateHolder, CheckService service) {
         super(stateHolder);
         this.service = service;
     }
 
     @Override
     public void execute(final StateContext<FsmState, FsmEvent> context) {
+        // TODO: отправка сообщения "сщоздать задачу в ПЕГА"
         boolean success = service.defaultAction();
 
         if (!success) {
