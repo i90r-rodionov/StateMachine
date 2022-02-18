@@ -9,20 +9,22 @@ import org.springframework.statemachine.StateContext;
 import org.springframework.stereotype.Component;
 
 
-@Component("checkMovedFilesOrSla")
+@Component("checkEcmSendSla")
 @Slf4j
-public class MoveFilesGuard extends BaseGuard {
+public class EcmSendGuard extends BaseGuard {
 
-    public MoveFilesGuard(CheckService checkService) {
+    public EcmSendGuard(CheckService checkService) {
         super(checkService);
     }
 
     @Override
     public boolean evaluate(StateContext<FsmState, FsmEvent> context) {
+        log.debug("   ??? Guard evalute [{}]", this.getClass().getSimpleName());
 
-        boolean flag = getCheckService().checkMovedFiles();
+        boolean flag = false;
 
-        if (!flag && checkSlaForState(context)) {
+        if (checkSlaForState(context)) {
+            log.debug("   ??? Set SLA_FLAG");
             context.getExtendedState().getVariables().put(FsmHelper.SLA_FLAG, true);
             flag = true;
         }
@@ -36,5 +38,4 @@ public class MoveFilesGuard extends BaseGuard {
         // TODO
         return getCheckService().checkSla();
     }
-
 }

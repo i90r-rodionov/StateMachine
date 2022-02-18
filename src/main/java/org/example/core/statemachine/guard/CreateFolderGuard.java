@@ -23,7 +23,7 @@ public class CreateFolderGuard extends BaseGuard {
 
         boolean flag = getCheckService().checkCreatedFolder();
 
-        if (!flag && checkSla(context)) {
+        if (!flag && checkSlaForState(context)) {
             log.debug("   ??? Set SLA_FLAG");
             context.getExtendedState().getVariables().put(FsmHelper.SLA_FLAG, true);
             flag = true;
@@ -34,7 +34,7 @@ public class CreateFolderGuard extends BaseGuard {
     }
 
     @Override
-    protected boolean checkSla(StateContext<FsmState, FsmEvent> context) {
+    protected boolean checkSlaForState(StateContext<FsmState, FsmEvent> context) {
         // TODO
         return getCheckService().checkSla();
     }

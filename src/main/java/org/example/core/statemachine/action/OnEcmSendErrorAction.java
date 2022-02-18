@@ -8,12 +8,12 @@ import org.springframework.statemachine.StateContext;
 import org.springframework.stereotype.Component;
 
 
-@Component("moveFilesToEcmFolderErrorAction")
-public class MoveFilesToEcmFolderErrorAction extends BaseAction {
+@Component
+public class OnEcmSendErrorAction extends BaseAction {
 
     private final CheckService service;
 
-    public MoveFilesToEcmFolderErrorAction(StateHolder stateHolder, CheckService service) {
+    public OnEcmSendErrorAction(StateHolder stateHolder, CheckService service) {
         super(stateHolder);
         this.service = service;
     }

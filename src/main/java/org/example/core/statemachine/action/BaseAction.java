@@ -26,8 +26,6 @@ abstract public class BaseAction implements Action<FsmState, FsmEvent> {
                 this.getClass().getSimpleName(), context.getSource().getId().name(), context.getTarget().getId().name());
 
         stateHolder.setState(context.getTarget().getId());
-        //context.getStateMachine().stop();
-        //context.getStateMachine().start();
     }
 
     protected StateHolder getStateHolder() {
@@ -37,10 +35,6 @@ abstract public class BaseAction implements Action<FsmState, FsmEvent> {
     protected void generateError() {
         log.debug("   ### Error in [{}]", this.getClass().getSimpleName());
         throw new RuntimeException(this.getClass().getSimpleName() + " Error");
-    }
-
-    protected boolean isSla(final StateContext<FsmState, FsmEvent> context) {
-        return false;
     }
 
     protected void sendEvent(final StateContext<FsmState, FsmEvent> context, FsmEvent event) {
@@ -53,5 +47,9 @@ abstract public class BaseAction implements Action<FsmState, FsmEvent> {
         context.getStateMachine().sendEvent(Mono.just(fsmEventMessage)).subscribe();
 
         log.debug("   ### Action sendEvent=[{}]", event.name());
+    }
+
+    protected boolean isSetSla(final StateContext<FsmState, FsmEvent> context) {
+        return false;
     }
 }

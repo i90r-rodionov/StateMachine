@@ -42,7 +42,7 @@ public abstract class BaseGuard implements Guard<FsmState, FsmEvent> {
         return flag;
     }
 
-    protected boolean checkSla(StateContext<FsmState, FsmEvent> context) {
+    protected boolean checkSlaForState(StateContext<FsmState, FsmEvent> context) {
         return false;
     }
 

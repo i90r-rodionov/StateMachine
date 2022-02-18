@@ -7,10 +7,12 @@ import org.example.core.service.mock.CheckService;
 import org.example.core.statemachine.event.FsmEvent;
 import org.example.core.statemachine.state.FsmState;
 import org.example.domain.config.DomainConfig;
+import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.statemachine.StateMachine;
 import org.springframework.statemachine.StateMachineContext;
 import org.springframework.statemachine.action.Action;
@@ -23,6 +25,8 @@ import org.springframework.statemachine.support.DefaultStateMachineContext;
 @Slf4j
 public abstract class AbstractFsmTest {
 
+    protected AnnotationConfigApplicationContext context;
+
     @Autowired
     protected StateMachineFactory<FsmState, FsmEvent> stateMachineFactory;
 
@@ -32,6 +36,15 @@ public abstract class AbstractFsmTest {
     @MockBean(name = "saveStateAction")
     protected Action<FsmState, FsmEvent> saveStateAction;
 
+
+    @BeforeEach
+    void setUp() {
+        context = buildContext();
+    }
+
+    protected AnnotationConfigApplicationContext buildContext(){
+        return null;
+    }
 
 
     protected StateMachine<FsmState, FsmEvent> getStateMachine(FsmState fsmState) {
